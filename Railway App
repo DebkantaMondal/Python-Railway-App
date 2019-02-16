@@ -1,0 +1,166 @@
+from tkinter import *
+import requests
+from PIL import ImageTk,Image
+
+class Ixigo:
+
+    def __init__(self):
+
+        self.root=Tk()
+
+        #self.root.minsize(260,300)
+        #self.root.maxsize(260,300)
+        
+        self.root.title("Railway Helper")
+
+        self.img = ImageTk.PhotoImage(Image.open('train.jpg'))
+        panel = Label(self.root,image=self.img, width=260,height=100)
+        panel.grid(row=0, columnspan=1)
+
+        Button(self.root, text="Check PNR Status", bg="#ff00ff", relief="flat",fg="#ffffff",
+        command=lambda :self.check_pnr()).grid(row=2,columnspan=1,padx="10", pady="5")
+        Button(self.root, text="Train Running Status",bg="#6600ff", relief="flat",fg="#ffffff",
+        command=lambda: self.check_live_status()).grid(row=4,columnspan=1,padx="5", pady="5")
+        Button(self.root, text="Train Seat Availability Status",bg="#000066", relief="flat", fg="#ffffff",
+        command=lambda: self.check_seat_available()).grid(row=6,columnspan=1,padx="5", pady="5")
+
+        
+         
+
+        
+
+        self.root.mainloop()
+
+    def check_pnr(self):
+
+        
+        
+
+        self.cancel_window()
+
+        #self.root.minsize(260,600)
+        #self.root.maxsize(260,600)
+
+        Label(self.root, text="PNR Result Window", bg="#ff0066", fg="#ffffff").grid(row=0, columnspan=1,padx=5, pady=5)
+
+        
+        Label(self.root, text="Enter Your Train No.:").grid(row=1, column=0)
+        self.pnrInput=Entry(self.root)
+        self.pnrInput.grid(row=1,column=1,padx=5,pady=5)
+        Button(self.root, text="Check PNR Status", bg="#003300", fg="#ffffff", command=lambda :self.pnr()).grid(row=2,column=1, padx=5, pady=5)
+
+        self.pnrResult=Label(text="", fg="#009900",)
+        self.pnrResult.grid(row=3,columnspan=2)
+
+        
+
+    def pnr(self):
+
+        try:
+
+            response=requests.get("""https://api.railwayapi.com/v2/route/train/{}/apikey/x48av3jl89/""".format(self.pnrInput.get()))
+            station_names = ""
+            for i in response.json()['route']:
+
+                station_names=station_names + i['station']['name'] + "\n"
+
+            self.pnrResult.configure(text=station_names)
+        #print(station_names)
+
+        except:
+
+            self.pnrResult.configure(text="Something Error Occurred.")
+            
+
+    def check_live_status(self):
+
+        self.cancel_window()
+
+        Label(self.root, text="Enter Train No:").grid(row=0, column=0)
+        self.liveInput=Entry(self.root)
+        self.liveInput.grid(row=0,column=1)
+        Label(self.root, text="Enter Date:",).grid(row=1, column=0)
+        self.dateInput=Entry(self.root)
+        self.dateInput.insert(0, 'dd-mm-yyyy')
+        self.dateInput.grid(row=1,column=1)
+        Label(self.root, text="Enter Destination Station Code:").grid(row=2, column=0)
+        self.stationInput=Entry(self.root)
+        self.stationInput.grid(row=2,column=1)
+        #Button(self.root, text="Train Running Status", command=lambda :self.liveStatus()).grid(row=0,column=1)
+        Button(self.root, text="Train Running Status", command=lambda :self.liveStatus()).grid(row=4,columnspan=1)
+
+        self.pnrResult=Label(text="", fg="red")
+        self.pnrResult.grid(row=5,columnspan=1)
+
+    def liveStatus(self):
+
+        try:
+
+            response=requests.get("""https://api.railwayapi.com/v2/live/train/{}/station/{}/date/{}/apikey/x48av3jl89/""".format(self.liveInput.get(),self.stationInput.get(),self.dateInput.get()))
+            #station_name = ""
+        
+
+            station_name=response.json()['position']+ "\n"
+
+            self.pnrResult.configure(text=station_name)
+            #print(station_names)
+
+        except:
+            self.pnrResult.configure(text="Something Error Occurred.")
+
+
+    def check_seat_available(self):
+
+        self.cancel_window()
+
+        Label(self.root, text="Enter Train No:").grid(row=0, column=0)
+        self.trainInput=Entry(self.root)
+        self.trainInput.grid(row=0,column=1)
+        Label(self.root, text="Enter Date:").grid(row=1, column=0)
+        self.dateInput=Entry(self.root)
+        self.dateInput.grid(row=1,column=1)
+        Label(self.root, text="Enter Source Station:").grid(row=2, column=0)
+        self.stationsInput=Entry(self.root)
+        self.stationsInput.grid(row=2,column=1)
+        Label(self.root, text="Enter Destination Station:").grid(row=3, column=0)
+        self.stationdInput=Entry(self.root)
+        self.stationdInput.grid(row=3,column=1)
+        Label(self.root, text="Enter Class/Coach Type:").grid(row=4, column=0)
+        #classInp=self.StringVar()
+        #classInput=self.Combobox(win,width=12,textvariable=classInp)
+        #classInput['values']=('1A', '2A', '3A', 'SL')
+        #classInput.grid(row=4, column=1)
+        #classInput.current(0)
+        self.classInput=Entry(self.root)
+        self.classInput.grid(row=4,column=1)
+        Button(self.root, text="Train Running Status", command=lambda :self.seatAvailable()).grid(row=6,column=1)
+        #Button(self.root, text="Check Seat Availability", command=lambda :self.seatAvailable()).grid(row=5,columnspan=1)
+
+        self.seatResult=Label(text="", fg="red")
+        self.seatResult.grid(row=6,columnspan=1)
+
+    def seatAvailable(self):
+
+        try:
+
+            response=requests.get("""https://api.railwayapi.com/v2/check-seat/train/{}/source/{}/dest/{}/date/{}/pref/{}/quota/GN/apikey/x48av3jl89/"""
+                                  .format(self.trainInput.get(),self.stationsInput.get(),self.stationdInput.get(),self.dateInput.get(),self.classInput.get()))
+            #station_name = ""
+        
+
+            for i in response.json()['availability']:
+                seat = i['status']
+
+            self.seatResult.configure(text=seat)
+            #print(station_names)
+
+        except:
+            self.seatResult.configure(text="Something Error Occurred.")
+
+
+    def cancel_window(self):
+
+        for i in self.root.grid_slaves():
+            i.destroy()
+
+obj=Ixigo()
